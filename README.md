@@ -15,24 +15,4 @@ Type the category name or press enter to display data for all available jobs: py
 
 Type number of skills to display: 7
 
----------------------------------------------
-LOADING...
----------------------------------------------
-
-+-----------+---------+
-| SKILL     | COUNTER |
-+===========+=========+
-| python    | 63      |
-+-----------+---------+
-| django    | 24      |
-+-----------+---------+
-| english   | 10      |
-+-----------+---------+
-| docker    | 8       |
-+-----------+---------+
-| git       | 6       |
-+-----------+---------+
-| databases | 5       |
-+-----------+---------+
-| rest      | 5       |
-+-----------+---------+
+AND NOW IT WILL DISPLAY YOU DATA IN THE TABLE
