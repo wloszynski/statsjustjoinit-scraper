@@ -62,7 +62,7 @@ while True:
     html.send_keys(Keys.PAGE_DOWN)
     html.send_keys(Keys.PAGE_DOWN)
 
-
+browser.quit()
 my_list = list(dict.fromkeys(my_list))
 # print(len(my_list))
 
