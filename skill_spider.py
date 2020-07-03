@@ -5,18 +5,14 @@ from collections import Counter
 import termtables as tt
 
 categories = ['javascript', 'html', 'php', 'ruby', 'python', 'java', 'net', 'scala', 'c', 'mobile', 'testing', 'devops', 'ux', 'pm', 'game', 'analytics', 'security', 'data', 'go', 'sap', 'support', 'other']
-
-my_list = []
-cities = ['Warszawa', 'Kraków', 'Wrocław', 'Poznań', 'Trójmiasto', 'Śląsk', 'Białystok', 'Bielsko-Biała', 'Bydgoszcz', 'Częstochowa', 'Kielce', 'Lublin', 'Łódź', 'Olsztyn', 'Opole', 'Toruń', 'Rzeszów', 'Szczecin', 'Zielona Góra', 'Katowice', 'Gdynia']
-types = ['interview', 'Online', 'Remote', '/', 'ago', 'Poland']
 numbers = ['1','2','3','4','5','6','7','8','9']
-forbidden_words = cities + types + numbers
-
+my_list = []
+forbidden_words = ['Online interview', 'Remote']
 
 print('Categories:\n',categories, '\n')
 
 category = ''
-number_of_skills = 5
+number_of_skills = None
 
 while True:
     category = input('Type the category name or press enter to display data for all available jobs: ')
@@ -29,13 +25,13 @@ while True:
 
 while True:
     number_of_skills = input('\nType number of skills to display: ')
-
     if number_of_skills in numbers:
         break
     else:
         number_of_skills = 5
         break
-
+    
+    
 print('\n---------------------------------------------')
 print('LOADING...')
 print('---------------------------------------------\n')
@@ -69,8 +65,8 @@ my_list = list(dict.fromkeys(my_list))
 requirements_list = []
 
 for x in my_list:
-    x = x.split()
-    requirements_list = requirements_list + x[-6:]
+    x = x.split('\n')
+    requirements_list = requirements_list + x[-3:]
 
 for word in list(requirements_list):
     if word in forbidden_words:
