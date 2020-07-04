@@ -104,6 +104,7 @@ def displayData():
 
     rows = cur.fetchall()
 
+    print('\nDisplaying data for: ', category.upper())
     # formating data into tables
     formatted_table_with_data = tt.to_string(
         rows,
