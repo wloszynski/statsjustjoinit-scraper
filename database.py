@@ -79,7 +79,7 @@ def liveRetrieve():
         if row is None:
             cur.execute('INSERT INTO count (language_id, skill_id, counter) VALUES (?, ?, ?)', (categories.index(category)+1, skill_id, skill_counter))
         else:
-            cur.execute('UPDATE count SET counter = ? WHERE id = ? AND skill_id = ?', (skill_counter, row[0], skill_id))
+            cur.execute('UPDATE count SET counter = ? WHERE id = ? AND skill_id = ?', (row[0], skill_id))
 
         conn.commit()
 
@@ -104,7 +104,6 @@ def displayData():
 
     rows = cur.fetchall()
 
-    print('\nDisplaying data for: ', category.upper())
     # formating data into tables
     formatted_table_with_data = tt.to_string(
         rows,
@@ -166,7 +165,7 @@ except:
 
 # choosing category to scrape data for
 while True:
-    category = input('Type the category name or press enter to display data for all available jobs: ').lower()
+    category = input('Type the category name or press enter to display data for all available jobs: ')
 
     if category in categories:
         break

@@ -1,0 +1,16 @@
+
+CREATE TABLE language(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(64) UNIQUE
+)
+
+CREATE TABLE skill(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(64) UNIQUE
+)
+
+CREATE TABLE count(
+    language_id INTEGER,
+    skill_id INTEGER,
+    counter INTEGER
+)

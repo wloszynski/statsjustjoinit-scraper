@@ -17,80 +17,63 @@ def liveRetrieve():
     browser.get(url)
     scroll_element = browser.find_element_by_class_name('css-ic7v2w')
     last_offers = None
-    requirements_list = []
+    required_skills = []
 
-    # reading divs with offers, to compare with last offers, so if divs_with_offers == last_offers, it means that, we have reached the bottom of the page
     while True:
         time.sleep(1)
         divs_with_offers = browser.find_elements_by_xpath("/html/body/div[1]/div[3]/div[1]/div/div[2]/div[1]/div/div/div")
         divs_with_skills = browser.find_elements_by_class_name('css-1ij7669')
+        # divs_with_skills = [my_elem.text for my_elem in WebDriverWait(browser, 10).until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "css-1ij7669")))]
 
         if divs_with_offers == last_offers:
             break
         else:
             last_offers = divs_with_offers
 
-            # adding text of anchor tags (as tuple) to a list
             for element in divs_with_skills:
-                requirements_list.append(element.text)
-            
-            # scrolling down, so new divs will be created
+                required_skills.append(element.text)
+
             scroll_element.send_keys(Keys.PAGE_DOWN)
 
-    # closing browser
     browser.quit()
 
-    # deleting duplicated offers, we are deleting duplicated tuples 
-    requirements_list = list(dict.fromkeys(requirements_list))
+    requirements_list = []
 
-    # this list will contain every single anchor tag (so when we have tuple like (python, machine learning, go), they will be added to the list as single elements
-    # ['python', 'machine learning', 'go'], and in this list will be a lot of duplicates
-    required_skills = []
+    required_skills = list(dict.fromkeys(required_skills))
 
-    for x in requirements_list:
+    for x in required_skills:
         x = x.replace(' /','\n').replace('/ ','\n').replace(' / ','\n').replace('/','\n').split('\n')
         x = [sub.strip() for sub in x]
-        required_skills += x
+        requirements_list = requirements_list + x
+        
+    most_common_skills = Counter(requirements_list).most_common(number_of_skills)
 
-    # we are counting how many duplicates of a single element are in required_skill[] list, and we are getting top number_of_skills entered by user
-    most_common_skills = Counter(required_skills).most_common(1000)
+    now_time = datetime.datetime.now()
+    cur.execute('UPDATE language SET last_update = ? WHERE name like ?', (now_time, category) )
 
-
-    # adding skills and counter to proper category
     for element in most_common_skills:
-        skill_name = element[0]
-        skill_counter = element[1]
+        cur.execute('SELECT id from skill WHERE name like ?', (element[0], ) )
+        print(element[0], element[1])
 
-        # checking if skill name is in the skill table, if not it will insert one
-        cur.execute('SELECT id from skill WHERE name like ?', (skill_name, ) )
         row = cur.fetchone()
         if row is None:
-            cur.execute('INSERT INTO skill (name) VALUES (?)', (skill_name, ) ) 
+            cur.execute('INSERT INTO skill (name) VALUES (?)', (element[0],))
         
-        # if skill name in skill table, we are retrieving its id
-        cur.execute('SELECT id from skill WHERE name like ?', (skill_name, ) )
+        cur.execute('SELECT id from skill WHERE name like ?', (element[0], ) )
         row = cur.fetchone()
         skill_id = row[0]
 
-        # getting id of the row from count table, so we can later update its columns
-        cur.execute('SELECT id FROM count WHERE skill_id like ? AND language_id like ?',(skill_id, categories.index(category)+1) )
+        cur.execute('SELECT skill_id FROM count WHERE skill_id like ?',(skill_id,))
 
         row = cur.fetchone()
         if row is None:
-            cur.execute('INSERT INTO count (language_id, skill_id, counter) VALUES (?, ?, ?)', (categories.index(category)+1, skill_id, skill_counter))
+            cur.execute('INSERT INTO count (language_id, skill_id, counter) VALUES (?, ?, ?)', (categories.index(category)+1, skill_id, element[1]))
         else:
-            cur.execute('UPDATE count SET counter = ? WHERE id = ? AND skill_id = ?', (skill_counter, row[0], skill_id))
+            cur.execute('UPDATE count SET counter = ? WHERE language_id = ? AND skill_id = ?', ( element[1],categories.index(category)+1, skill_id))
 
         conn.commit()
 
-    # setting last_update to now(), so program knows that there is an exisitng data for this category in the database, so user can decide if he wants to
-    # scrape website on live, or just retrieve data for this category from database
-    now_time = datetime.datetime.now()
-    cur.execute('UPDATE language SET last_update = ? WHERE name like ?', (now_time, category) )
-    conn.commit()
 
-
-#displaying data function - retrieving data from db, and printing it as table
 def displayData():
     cur.execute('''
         SELECT skill.name, counter
@@ -99,13 +82,12 @@ def displayData():
         INNER JOIN skill on skill.id = count.skill_id
         WHERE language.id = ?
         ORDER BY counter DESC
+
         LIMIT ?
     ''', (categories.index(category)+1, number_of_skills))
 
     rows = cur.fetchall()
 
-    print('\nDisplaying data for: ', category.upper())
-    # formating data into tables
     formatted_table_with_data = tt.to_string(
         rows,
         header = ['SKILL', 'COUNTER'],
@@ -114,11 +96,10 @@ def displayData():
     print(formatted_table_with_data)
 
 
-# --------------------------------------------
-# MAIN PROGRAM
-# --------------------------------------------
 
-# list of available categories from justjoin.it website
+
+
+
 categories = ['all', 'javascript', 'html', 'php', 'ruby', 'python', 'java', 'net', 'scala', 'c', 'mobile', 'testing', 'devops', 'ux', 'pm', 'game', 'analytics', 'security', 'data', 'go', 'sap', 'support', 'other']
 
 print('Categories:\n', categories, '\n')
@@ -126,8 +107,6 @@ print('Categories:\n', categories, '\n')
 conn = sqlite3.connect('skill_counter.sqlite')
 
 cur = conn.cursor()
-
-# creating tables if not exists
 
 cur.execute('''
     CREATE TABLE IF NOT EXISTS language(
@@ -148,7 +127,6 @@ cur.execute('''
 
 cur.execute('''
     CREATE TABLE IF NOT EXISTS count(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
         language_id INTEGER,
         skill_id INTEGER,
         counter INTEGER
@@ -156,7 +134,6 @@ cur.execute('''
 '''
 )
 
-# inserting categories to language table in the database (only for the first time)
 try:
     for category_name in categories:
         cur.execute('INSERT INTO language (name, last_update) VALUES (?, ?)', (category_name,'NULL'))
@@ -164,15 +141,15 @@ try:
 except:
     print('')
 
-# choosing category to scrape data for
+   
+
 while True:
-    category = input('Type the category name or press enter to display data for all available jobs: ').lower()
+    category = input('Type the category name or press enter to display data for all available jobs: ')
 
     if category in categories:
         break
     print('Wrong input, type again!\n')
 
-# choosing the number of skills to display in the table, it must be an integer
 while True:
     try:
         number_of_skills = int(input('\nType number of skills to display: '))
@@ -182,16 +159,14 @@ while True:
     else:
         break
 
-# getting information if data for chose category is in our database if not it will immediately go to scrape a web
-# otherwise it will ask user whether to display data from database or scrape web to display live data
-# at the begining every category has last_update set to NULL
+
 cur.execute('SELECT last_update FROM language WHERE id like ?',(categories.index(category)+1, ))    
 row = cur.fetchone()
 
 if(row[0] != 'NULL'):
     print('Last update:',row[0])
     while True:
-        from_db = input('Do you want to retrieve data from db? (yes/no) ').strip().lower()
+        from_db = input('Do you want to retrieve data from db? (yes/no)\n')
 
         if from_db == 'yes':
             print('Displaying from db')
@@ -210,3 +185,12 @@ else:
 
 conn.close()
 
+def main():
+    conn = sqlite3.connect('skill_counter.sqlite')
+
+    #create tables
+    #insert base data
+    #ask for input
+    #display
+
+    conn.close()
