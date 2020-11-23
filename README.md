@@ -1,10 +1,14 @@
 # skills-requirements-justjoinit-spider
 This app counts the number of skills requirements from employees using justjoin.it website.
 
-To use this program you must install chromedriver for Chrome or geckodriver for Firefox.
-Then go to terminal and type: python3 skill_spider.py
-It will ask you to choose category and number of skills, then it will open your browser, scrape data, close browser, and show you the results.
+To use this program you must install geckodriver for Firefox. (search: how to install geckodriver for Firefox <name of your operating system>)
 
+Open terminal/cmd and type 'pip install selenium' and 'pip install termtable'.
+Now you can use skill_spider!
+
+Go to terminal and type: python3 skill_spider.py.
+
+It will ask you to choose category and number of skills, then it will open your browser, scrape data, close browser, and show you the results.
 
 EXAMPLE: 
 
