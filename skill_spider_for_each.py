@@ -9,7 +9,7 @@ import datetime
 def liveRetrieve():
 
     print('\n---------------------------------------------')
-    print('LOADING...')
+    print(category)
     print('---------------------------------------------\n')
 
     browser = webdriver.Firefox()
@@ -89,41 +89,16 @@ def liveRetrieve():
     cur.execute('UPDATE language SET last_update = ? WHERE name like ?', (now_time, category) )
     conn.commit()
 
-
-#displaying data function - retrieving data from db, and printing it as table
-def displayData():
-    cur.execute('''
-        SELECT skill.name, counter
-        FROM count
-        INNER JOIN language ON language.id = count.language_id
-        INNER JOIN skill on skill.id = count.skill_id
-        WHERE language.id = ?
-        ORDER BY counter DESC
-        LIMIT ?
-    ''', (categories.index(category)+1, number_of_skills))
-
-    rows = cur.fetchall()
-
-    print('\nDisplaying data for: ', category.upper())
-    # formating data into tables
-    formatted_table_with_data = tt.to_string(
-        rows,
-        header = ['SKILL', 'COUNTER'],
-        style = tt.styles.ascii_thin_double
-    )
-    print(formatted_table_with_data)
-
-
 # --------------------------------------------
 # MAIN PROGRAM
 # --------------------------------------------
 
 # list of available categories from justjoin.it website
-categories = ['all', 'javascript', 'html', 'php', 'ruby', 'python', 'java', 'net', 'scala', 'c', 'mobile', 'testing', 'devops', 'ux', 'pm', 'game', 'analytics', 'security', 'data', 'go', 'sap', 'support', 'other']
+categories = ['javascript', 'html', 'php', 'ruby', 'python', 'java', 'net', 'scala', 'c', 'mobile', 'testing', 'devops', 'ux', 'pm', 'game', 'analytics', 'security', 'data', 'go', 'sap', 'support', 'other']
 
-print('Categories:\n', categories, '\n')
+# print('Categories:\n', categories, '\n')
 
-conn = sqlite3.connect('skill_counter.sqlite')
+conn = sqlite3.connect('skill_counter_each.sqlite')
 
 cur = conn.cursor()
 
@@ -162,51 +137,13 @@ try:
         cur.execute('INSERT INTO language (name, last_update) VALUES (?, ?)', (category_name,'NULL'))
     conn.commit()
 except:
-    print('')
+    pass
 
-# choosing category to scrape data for
-while True:
-    category = input('Type the category name or press enter to display data for all available jobs: ').lower()
 
-    if category in categories:
-        break
-    print('Wrong input, type again!\n')
 
-# choosing the number of skills to display in the table, it must be an integer
-while True:
-    try:
-        number_of_skills = int(input('\nType number of skills to display: '))
-    except ValueError:
-        print('Not an integer! Try again!')
-        continue
-    else:
-        break
 
-# getting information if data for chose category is in our database if not it will immediately go to scrape a web
-# otherwise it will ask user whether to display data from database or scrape web to display live data
-# at the begining every category has last_update set to NULL
-cur.execute('SELECT last_update FROM language WHERE id like ?',(categories.index(category)+1, ))    
-row = cur.fetchone()
-
-if(row[0] != 'NULL'):
-    print('Last update:',row[0])
-    while True:
-        from_db = input('Do you want to retrieve data from db? (yes/no) ').strip().lower()
-
-        if from_db == 'yes':
-            print('Displaying from db')
-            displayData()
-            break
-        elif from_db == 'no':
-            print('Displaying live data')
-            liveRetrieve()
-            displayData()
-            break
-        else:
-            print('Wrong input, type again!\n')
-else:
+for category in categories:
     liveRetrieve()
-    displayData()
 
 conn.close()
 
