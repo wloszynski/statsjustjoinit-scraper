@@ -42,7 +42,7 @@ def liveRetrieve():
 
     # deleting duplicated offers, we are deleting duplicated tuples 
     requirements_list = list(dict.fromkeys(requirements_list))
-
+    number_of_offers = len(requirements_list)
     # this list will contain every single anchor tag (so when we have tuple like (python, machine learning, go), they will be added to the list as single elements
     # ('python', 'machine learning', 'go'), and in this list will be a lot of duplicates
     required_skills = []
@@ -85,8 +85,18 @@ def liveRetrieve():
 
     # setting last_update to now(), so program knows that there is an exisitng data for this category in the database, so user can decide if he wants to
     # scrape website on live, or just retrieve data for this category from database
-    now_time = datetime.datetime.now()
+    now_time = str(datetime.datetime.now())
+
     cur.execute('UPDATE language SET last_update = ? WHERE name like ?', (now_time, category) )
+
+    now_date = now_time.split(' ')[0]
+
+    cur.execute('SELECT id FROM overtime WHERE date_created like ? AND language_id like ?',(now_date, categories.index(category)+1))
+    if row is None:
+        cur.execute('INSERT INTO overtime (language_id, counter, date_created) VALUES (?, ?, ?)', (categories.index(category)+1, number_of_offers, now_date))
+    else:
+        print(category + 'is already in db')
+
     conn.commit()
 
 # --------------------------------------------
@@ -126,6 +136,16 @@ cur.execute('''
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         language_id INTEGER,
         skill_id INTEGER,
+        counter INTEGER
+    ) 
+'''
+)
+
+cur.execute('''
+    CREATE TABLE IF NOT EXISTS overtime(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        language_id INTEGER,
+        date_created varchar(128),
         counter INTEGER
     ) 
 '''
