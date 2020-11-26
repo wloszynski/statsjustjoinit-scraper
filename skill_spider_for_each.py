@@ -162,7 +162,7 @@ except:
 
 
 
-for category in categories:
+for category in categories[10:]:
     liveRetrieve()
 
 conn.close()
