@@ -61,7 +61,7 @@ def liveRetrieve():
     required_skills = []
 
     for x in list_compound_elements:
-        (job_title, company_name, skill) = x
+        (_, _, skill) = x
         requirements_list.append(skill)
 
     for x in requirements_list:
@@ -108,14 +108,36 @@ def liveRetrieve():
 
     now_date = now_time.split(' ')[0]
 
-    cur.execute('SELECT id FROM overtime WHERE date_created like ? AND language_id like ?',(now_date, categories.index(category)+1))
+    cur.execute('SELECT id FROM overtime_jobs WHERE date_created like ? AND language_id like ?',(now_date, categories.index(category)+1))
     row = cur.fetchone()
     if row is None:
-        cur.execute('INSERT INTO overtime (language_id, counter, date_created) VALUES (?, ?, ?)', (categories.index(category)+1, number_of_offers, now_date))
+        cur.execute('INSERT INTO overtime_jobs (language_id, counter, date_created) VALUES (?, ?, ?)', (categories.index(category)+1, number_of_offers, now_date))
     else:
         print(category + ' is already in db')
 
     conn.commit()
+
+
+# adding skills and counter to proper category
+    for element in most_common_skills:
+        skill_name = element[0]
+        skill_counter = element[1]
+
+                
+        # if skill name in skill table, we are retrieving its id
+        cur.execute('SELECT id from skill WHERE name like ?', (skill_name, ) )
+        row = cur.fetchone()
+        skill_id = row[0]
+
+        # getting id of the row from count table, so we can later update its columns
+        cur.execute('SELECT id FROM overtime_skills WHERE skill_id like ? AND language_id like ? AND date_created like ?',(skill_id, categories.index(category)+1, now_time) )
+
+        row = cur.fetchone()
+        if row is None:
+            cur.execute('INSERT INTO overtime_skills (language_id, skill_id, counter, date_created) VALUES (?, ?, ?, ?)', (categories.index(category)+1, skill_id, skill_counter, now_time))
+
+    conn.commit()
+
 
 # --------------------------------------------
 # MAIN PROGRAM
@@ -160,9 +182,19 @@ cur.execute('''
 )
 
 cur.execute('''
-    CREATE TABLE IF NOT EXISTS overtime(
+    CREATE TABLE IF NOT EXISTS overtime_jobs(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         language_id INTEGER,
+        date_created varchar(128),
+        counter INTEGER
+    ) 
+'''
+)
+cur.execute('''
+    CREATE TABLE IF NOT EXISTS overtime_skills(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        language_id INTEGER,
+        skill_id INTEGER,
         date_created varchar(128),
         counter INTEGER
     ) 
