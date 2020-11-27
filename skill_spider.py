@@ -18,18 +18,26 @@ def liveRetrieve():
     scroll_element = browser.find_element_by_class_name('css-ic7v2w')
     last_offers = None
     requirements_list = []
+    names_list = []
+    companies_list = []
 
     # reading divs with offers, to compare with last offers, so if divs_with_offers == last_offers, it means that, we have reached the bottom of the page
     while True:
         time.sleep(1)
         divs_with_offers = browser.find_elements_by_xpath("/html/body/div[1]/div[3]/div[1]/div/div[2]/div[1]/div/div/div")
         divs_with_skills = browser.find_elements_by_class_name('css-1ij7669')
+        divs_with_company_names = browser.find_elements_by_class_name('css-ajz12e')
+        divs_with_job_names = browser.find_elements_by_class_name('css-1x9zltl')    
 
         if divs_with_offers == last_offers:
             break
         else:
             last_offers = divs_with_offers
 
+            for div in divs_with_company_names:
+                    companies_list.append(div.text)
+            for div in divs_with_job_names:
+                    names_list.append(div.text)
             # adding text of anchor tags (as tuple) to a list
             for element in divs_with_skills:
                 requirements_list.append(element.text)
@@ -40,13 +48,22 @@ def liveRetrieve():
     # closing browser
     browser.quit()
 
+    list_compound_elements = []
+    for x in range(len(names_list)):
+        list_compound_elements.append((names_list[x],companies_list[x], requirements_list[x]))
+
     # deleting duplicated offers, we are deleting duplicated tuples 
-    requirements_list = list(dict.fromkeys(requirements_list))
+    list_compound_elements = list(dict.fromkeys(list_compound_elements))
 
     # this list will contain every single anchor tag (so when we have tuple like (python, machine learning, go), they will be added to the list as single elements
     # ('python', 'machine learning', 'go'), and in this list will be a lot of duplicates
-    required_skills = []
+    required_skills = []    
 
+    for x in list_compound_elements:
+        (job_title, company_name, skill) = x
+        requirements_list.append(skill)
+    
+    print(len(list_compound_elements))
     for x in requirements_list:
         x = x.replace(' /','\n').replace('/ ','\n').replace(' / ','\n').replace('/','\n').split('\n')
         x = [sub.strip() for sub in x]

@@ -18,17 +18,26 @@ def liveRetrieve():
     scroll_element = browser.find_element_by_class_name('css-ic7v2w')
     last_offers = None
     requirements_list = []
+    names_list = []
+    companies_list = []
 
     # reading divs with offers, to compare with last offers, so if divs_with_offers == last_offers, it means that, we have reached the bottom of the page
     while True:
         time.sleep(1)
         divs_with_offers = browser.find_elements_by_xpath("/html/body/div[1]/div[3]/div[1]/div/div[2]/div[1]/div/div/div")
         divs_with_skills = browser.find_elements_by_class_name('css-1ij7669')
+        divs_with_company_names = browser.find_elements_by_class_name('css-ajz12e')
+        divs_with_job_names = browser.find_elements_by_class_name('css-1x9zltl') 
 
         if divs_with_offers == last_offers:
             break
         else:
             last_offers = divs_with_offers
+
+            for div in divs_with_company_names:
+                companies_list.append(div.text)
+            for div in divs_with_job_names:
+                names_list.append(div.text)
 
             # adding text of anchor tags (as tuple) to a list
             for element in divs_with_skills:
@@ -40,12 +49,20 @@ def liveRetrieve():
     # closing browser
     browser.quit()
 
+    list_compound_elements = []
+    for x in range(len(names_list)):
+        list_compound_elements.append((names_list[x],companies_list[x], requirements_list[x]))
+
     # deleting duplicated offers, we are deleting duplicated tuples 
-    requirements_list = list(dict.fromkeys(requirements_list))
-    number_of_offers = len(requirements_list)
+    list_compound_elements = list(dict.fromkeys(list_compound_elements))
+    number_of_offers = len(list_compound_elements)
     # this list will contain every single anchor tag (so when we have tuple like (python, machine learning, go), they will be added to the list as single elements
     # ('python', 'machine learning', 'go'), and in this list will be a lot of duplicates
     required_skills = []
+
+    for x in list_compound_elements:
+        (job_title, company_name, skill) = x
+        requirements_list.append(skill)
 
     for x in requirements_list:
         x = x.replace(' /','\n').replace('/ ','\n').replace(' / ','\n').replace('/','\n').split('\n')
@@ -92,10 +109,11 @@ def liveRetrieve():
     now_date = now_time.split(' ')[0]
 
     cur.execute('SELECT id FROM overtime WHERE date_created like ? AND language_id like ?',(now_date, categories.index(category)+1))
+    row = cur.fetchone()
     if row is None:
         cur.execute('INSERT INTO overtime (language_id, counter, date_created) VALUES (?, ?, ?)', (categories.index(category)+1, number_of_offers, now_date))
     else:
-        print(category + 'is already in db')
+        print(category + ' is already in db')
 
     conn.commit()
 
@@ -104,7 +122,7 @@ def liveRetrieve():
 # --------------------------------------------
 
 # list of available categories from justjoin.it website
-categories = ['javascript', 'html', 'php', 'ruby', 'python', 'java', 'net', 'scala', 'c', 'mobile', 'testing', 'devops', 'ux', 'pm', 'game', 'analytics', 'security', 'data', 'go', 'sap', 'support', 'other']
+categories = ['all', 'javascript', 'html', 'php', 'ruby', 'python', 'java', 'net', 'scala', 'c', 'mobile', 'testing', 'devops', 'ux', 'pm', 'game', 'analytics', 'security', 'data', 'go', 'sap', 'support', 'other']
 
 # print('Categories:\n', categories, '\n')
 
@@ -160,9 +178,8 @@ except:
     pass
 
 
-
-
-for category in categories[10:]:
+# for category in categories[10:]:
+for category in categories:
     liveRetrieve()
 
 conn.close()
