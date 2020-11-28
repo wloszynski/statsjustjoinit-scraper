@@ -20,6 +20,7 @@ def liveRetrieve():
     list_of_skills_scraped_from_website = []
     names_list = []
     companies_list = []
+    cities_list = []
 
     # reading divs with offers, to compare with last offers, so if divs_with_offers == last_offers, it means that, we have reached the bottom of the page
     while True:
@@ -27,7 +28,9 @@ def liveRetrieve():
         divs_with_offers = browser.find_elements_by_xpath("/html/body/div[1]/div[3]/div[1]/div/div[2]/div[1]/div/div/div")
         divs_with_skills = browser.find_elements_by_class_name('css-1ij7669')
         divs_with_company_names = browser.find_elements_by_class_name('css-ajz12e')
-        divs_with_job_names = browser.find_elements_by_class_name('css-1x9zltl')    
+        divs_with_job_names = browser.find_elements_by_class_name('css-1x9zltl')   
+        divs_with_city_names = browser.find_elements_by_class_name('css-1ihx907')   
+
 
         if divs_with_offers == last_offers:
             break
@@ -38,6 +41,8 @@ def liveRetrieve():
                     companies_list.append(div.text)
             for div in divs_with_job_names:
                     names_list.append(div.text)
+            for div in divs_with_city_names:
+                    cities_list.append(div.text)
             # adding text of anchor tags (as tuple) to a list
             for element in divs_with_skills:
                 list_of_skills_scraped_from_website.append(element.text)
@@ -50,7 +55,7 @@ def liveRetrieve():
 
     list_with_company_job_skill_names = []
     for x in range(len(names_list)):
-        list_with_company_job_skill_names.append((names_list[x],companies_list[x], list_of_skills_scraped_from_website[x]))
+        list_with_company_job_skill_names.append((names_list[x],companies_list[x], cities_list[x], list_of_skills_scraped_from_website[x]))
 
     # deleting duplicated offers, we are deleting duplicated tuples 
     list_with_company_job_skill_names = list(dict.fromkeys(list_with_company_job_skill_names))
@@ -61,10 +66,9 @@ def liveRetrieve():
     list_of_required_skills = []    
 
     for x in list_with_company_job_skill_names:
-        (_, _, skill) = x
+        (_, _, _, skill) = x
         list_of_skill_without_duplicates.append(skill)
     
-    print(len(list_with_company_job_skill_names))
     for x in list_of_skill_without_duplicates:
         x = x.replace(' /','\n').replace('/ ','\n').replace(' / ','\n').replace('/','\n').split('\n')
         x = [sub.strip() for sub in x]
