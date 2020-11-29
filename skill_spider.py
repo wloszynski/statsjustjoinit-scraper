@@ -6,7 +6,47 @@ import termtables as tt
 import sqlite3
 import datetime
 
-def liveRetrieve():
+def create_database():
+    print('Categories:\n', categories, '\n')
+
+    # creating tables if not exists
+
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS language(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name VARCHAR(128) UNIQUE,
+            last_update varchar(128)
+        )
+    '''
+    )
+
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS skill(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name VARCHAR(128) UNIQUE
+        )   
+    '''
+    )
+
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS count(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            language_id INTEGER,
+            skill_id INTEGER,
+            counter INTEGER
+        ) 
+    '''
+    )
+
+    # inserting categories to language table in the database (only for the first time)
+    try:
+        for category_name in categories:
+            cur.execute('INSERT INTO language (name, last_update) VALUES (?, ?)', (category_name,'NULL'))
+        conn.commit()
+    except:
+        print('')
+
+def live_retrieve():
 
     print('\n---------------------------------------------')
     print('LOADING...')
@@ -37,12 +77,14 @@ def liveRetrieve():
         else:
             last_offers = divs_with_offers
 
+            # creating lists with company, job and city names
             for div in divs_with_company_names:
                     companies_list.append(div.text)
             for div in divs_with_job_names:
                     names_list.append(div.text)
             for div in divs_with_city_names:
                     cities_list.append(div.text)
+
             # adding text of anchor tags (as tuple) to a list
             for element in divs_with_skills:
                 list_of_skills_scraped_from_website.append(element.text)
@@ -53,30 +95,33 @@ def liveRetrieve():
     # closing browser
     browser.quit()
 
+    # compounding new list fof touples (job_title, company_name, city_name, (skill1, skill2, skill3))
+    # (Python Developer, ChokityPooh, New York, (python, django, sql))
     list_with_company_job_skill_names = []
     for x in range(len(names_list)):
         list_with_company_job_skill_names.append((names_list[x],companies_list[x], cities_list[x], list_of_skills_scraped_from_website[x]))
 
-    # deleting duplicated offers, we are deleting duplicated tuples 
+    # deleting duplicated offers, we are deleting duplicated tuples
     list_with_company_job_skill_names = list(dict.fromkeys(list_with_company_job_skill_names))
 
-    # this list will contain every single anchor tag (so when we have tuple like (python, machine learning, go), they will be added to the list as single elements
-    # ('python', 'machine learning', 'go'), and in this list will be a lot of duplicates
-    list_of_skill_without_duplicates = []
+    # this is the list of all skills, but without replacing  / \
+    list_of_skills_without_duplicates = []
+
+    # this is the list of all skills ['python', 'django', 'sql', 'python', 'flask', 'django']
+    # there are duplicates due to the fact, that job offers can have the same required skill set
     list_of_required_skills = []    
 
     for x in list_with_company_job_skill_names:
         (_, _, _, skill) = x
-        list_of_skill_without_duplicates.append(skill)
+        list_of_skills_without_duplicates.append(skill)
     
-    for x in list_of_skill_without_duplicates:
+    for x in list_of_skills_without_duplicates:
         x = x.replace(' /','\n').replace('/ ','\n').replace(' / ','\n').replace('/','\n').split('\n')
         x = [sub.strip() for sub in x]
         list_of_required_skills += x
 
     # we are counting how many duplicates of a single element are in required_skill[] list, and we are getting top number_of_skills entered by user
     most_common_skills = Counter(list_of_required_skills).most_common(1000)
-
 
     # adding skills and counter to proper category
     for element in most_common_skills:
@@ -113,7 +158,7 @@ def liveRetrieve():
 
 
 #displaying data function - retrieving data from db, and printing it as table
-def displayData():
+def display_data():
     cur.execute('''
         SELECT skill.name, counter
         FROM count
@@ -136,99 +181,56 @@ def displayData():
     print(formatted_table_with_data)
 
 
-# --------------------------------------------
-# MAIN PROGRAM
-# --------------------------------------------
+if __name__ == '__main__':
+    categories = ['all', 'javascript', 'html', 'php', 'ruby', 'python', 'java', 'net', 'scala', 'c', 'mobile', 'testing', 'devops', 'ux', 'pm', 'game', 'analytics', 'security', 'data', 'go', 'sap', 'support', 'other']
 
-# list of available categories from justjoin.it website
-categories = ['all', 'javascript', 'html', 'php', 'ruby', 'python', 'java', 'net', 'scala', 'c', 'mobile', 'testing', 'devops', 'ux', 'pm', 'game', 'analytics', 'security', 'data', 'go', 'sap', 'support', 'other']
+    conn = sqlite3.connect('skill_counter.sqlite')
+    cur = conn.cursor()
 
-print('Categories:\n', categories, '\n')
+    create_database()
 
-conn = sqlite3.connect('skill_counter.sqlite')
-
-cur = conn.cursor()
-
-# creating tables if not exists
-
-cur.execute('''
-    CREATE TABLE IF NOT EXISTS language(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name VARCHAR(128) UNIQUE,
-        last_update varchar(128)
-    )
-'''
-)
-
-cur.execute('''
-    CREATE TABLE IF NOT EXISTS skill(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name VARCHAR(128) UNIQUE
-    )   
-'''
-)
-
-cur.execute('''
-    CREATE TABLE IF NOT EXISTS count(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        language_id INTEGER,
-        skill_id INTEGER,
-        counter INTEGER
-    ) 
-'''
-)
-
-# inserting categories to language table in the database (only for the first time)
-try:
-    for category_name in categories:
-        cur.execute('INSERT INTO language (name, last_update) VALUES (?, ?)', (category_name,'NULL'))
-    conn.commit()
-except:
-    print('')
-
-# choosing category to scrape data for
-while True:
-    category = input('Type the category name or press enter to display data for all available jobs: ').lower()
-
-    if category in categories:
-        break
-    print('Wrong input, type again!\n')
-
-# choosing the number of skills to display in the table, it must be an integer
-while True:
-    try:
-        number_of_skills = int(input('\nType number of skills to display: '))
-    except ValueError:
-        print('Not an integer! Try again!')
-        continue
-    else:
-        break
-
-# getting information if data for chose category is in our database if not it will immediately go to scrape a web
-# otherwise it will ask user whether to display data from database or scrape web to display live data
-# at the begining every category has last_update set to NULL
-cur.execute('SELECT last_update FROM language WHERE id like ?',(categories.index(category)+1, ))    
-row = cur.fetchone()
-
-if(row[0] != 'NULL'):
-    print('Last update:',row[0])
+        # choosing category to scrape data for
     while True:
-        from_db = input('Do you want to retrieve data from db? (yes/no) ').strip().lower()
+        category = input('Type the category name or press enter to display data for all available jobs: ').lower()
 
-        if from_db == 'yes':
-            print('Displaying from db')
-            displayData()
+        if category in categories:
             break
-        elif from_db == 'no':
-            print('Displaying live data')
-            liveRetrieve()
-            displayData()
-            break
+        print('Wrong input, type again!\n')
+
+    # choosing the number of skills to display in the table, it must be an integer
+    while True:
+        try:
+            number_of_skills = int(input('\nType number of skills to display: '))
+        except ValueError:
+            print('Not an integer! Try again!')
+            continue
         else:
-            print('Wrong input, type again!\n')
-else:
-    liveRetrieve()
-    displayData()
+            break
 
-conn.close()
+    # getting information if data for chosen category is in our database if not it will immediately go to scrape a web
+    # otherwise it will ask user whether to display data from database or scrape web to display live data
+    # at the begining every category has last_update set to NULL
+    cur.execute('SELECT last_update FROM language WHERE id like ?',(categories.index(category)+1, ))    
+    row = cur.fetchone()
 
+    if(row[0] != 'NULL'):
+        print('Last update:',row[0])
+        while True:
+            from_db = input('Do you want to retrieve data from db? (yes/no) ').strip().lower()
+
+            if from_db == 'yes':
+                print('Displaying from db')
+                display_data()
+                break
+            elif from_db == 'no':
+                print('Displaying live data')
+                live_retrieve()
+                display_data()
+                break
+            else:
+                print('Wrong input, type again!\n')
+    else:
+        live_retrieve()
+        display_data()
+
+    conn.close()
