@@ -189,7 +189,7 @@ if __name__ == '__main__':
 
     create_database()
 
-        # choosing category to scrape data for
+    # choosing category to scrape data for
     while True:
         category = input('Type the category name or press enter to display data for all available jobs: ').lower()
 
