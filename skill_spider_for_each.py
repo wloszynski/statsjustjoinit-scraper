@@ -60,7 +60,7 @@ def create_database():
 def live_retrieve():
 
     print('\n---------------------------------------------')
-    print('LOADING...')
+    print(category)
     print('---------------------------------------------\n')
 
     browser = webdriver.Firefox()
