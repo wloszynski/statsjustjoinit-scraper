@@ -187,5 +187,4 @@ if __name__ == '__main__':
     for category in categories:
         live_retrieve()
 
-
     conn.close()

@@ -184,7 +184,7 @@ def display_data():
 if __name__ == '__main__':
     categories = ['all', 'javascript', 'html', 'php', 'ruby', 'python', 'java', 'net', 'scala', 'c', 'mobile', 'testing', 'devops', 'ux', 'pm', 'game', 'analytics', 'security', 'data', 'go', 'sap', 'support', 'other']
 
-    conn = sqlite3.connect('skill_counter.sqlite')
+    conn = sqlite3.connect('skill_counter_single.sqlite')
     cur = conn.cursor()
 
     create_database()
