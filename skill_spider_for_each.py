@@ -1,7 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time
-from collections import Counter 
+from collections import Counter
 import termtables as tt
 import sqlite3
 import datetime
@@ -24,7 +24,7 @@ def create_database():
         CREATE TABLE IF NOT EXISTS skill(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name VARCHAR(128) UNIQUE
-        )   
+        )
     '''
     )
 
@@ -34,7 +34,7 @@ def create_database():
         language_id INTEGER,
         date_created varchar(128),
         counter INTEGER
-    ) 
+    )
     '''
     )
 
@@ -45,7 +45,7 @@ def create_database():
             skill_id INTEGER,
             date_created varchar(128),
             counter INTEGER
-        ) 
+        )
     '''
     )
 
@@ -81,8 +81,8 @@ def live_retrieve():
         divs_with_offers = browser.find_elements_by_xpath("/html/body/div[1]/div[3]/div[1]/div/div[2]/div[1]/div/div/div")
         divs_with_skills = browser.find_elements_by_class_name('css-1ij7669')
         divs_with_company_names = browser.find_elements_by_class_name('css-ajz12e')
-        divs_with_job_names = browser.find_elements_by_class_name('css-1x9zltl')   
-        divs_with_city_names = browser.find_elements_by_class_name('css-1ihx907')   
+        divs_with_job_names = browser.find_elements_by_class_name('css-1x9zltl')
+        divs_with_city_names = browser.find_elements_by_class_name('css-1ihx907')
 
         if divs_with_offers == last_offers:
             break
@@ -100,7 +100,7 @@ def live_retrieve():
             # adding text of anchor tags (as tuple) to a list
             for element in divs_with_skills:
                 list_of_skills_scraped_from_website.append(element.text)
-            
+
             # scrolling down, so new divs will be created
             scroll_element.send_keys(Keys.PAGE_DOWN)
 
@@ -122,12 +122,12 @@ def live_retrieve():
 
     # this is the list of all skills ['python', 'django', 'sql', 'python', 'flask', 'django']
     # there are duplicates due to the fact, that job offers can have the same required skill set
-    list_of_required_skills = []    
+    list_of_required_skills = []
 
     for x in list_with_company_job_skill_names:
         (_, _, _, skill) = x
         list_of_skills_without_duplicates.append(skill)
-    
+
     for x in list_of_skills_without_duplicates:
         x = x.replace(' /','\n').replace('/ ','\n').replace(' / ','\n').replace('/','\n').split('\n')
         x = [sub.strip() for sub in x]
@@ -145,8 +145,8 @@ def live_retrieve():
         cur.execute('SELECT id from skill WHERE name like ?', (skill_name, ) )
         row = cur.fetchone()
         if row is None:
-            cur.execute('INSERT INTO skill (name) VALUES (?)', (skill_name, ) ) 
-        
+            cur.execute('INSERT INTO skill (name) VALUES (?)', (skill_name, ) )
+
         # if skill name in skill table, we are retrieving its id
         cur.execute('SELECT id from skill WHERE name like ?', (skill_name, ) )
         row = cur.fetchone()
@@ -186,5 +186,4 @@ if __name__ == '__main__':
 
     for category in categories:
         live_retrieve()
-
     conn.close()
