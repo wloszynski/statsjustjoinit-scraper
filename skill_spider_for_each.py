@@ -77,7 +77,7 @@ def live_retrieve():
 
     # reading divs with offers, to compare with last offers, so if divs_with_offers == last_offers, it means that, we have reached the bottom of the page
     while True:
-        time.sleep(1)
+        time.sleep(2)
         divs_with_offers = browser.find_elements_by_xpath("/html/body/div[1]/div[3]/div[1]/div/div[2]/div[1]/div/div/div")
         divs_with_skills = browser.find_elements_by_class_name('css-1ij7669')
         divs_with_company_names = browser.find_elements_by_class_name('css-ajz12e')
@@ -177,8 +177,8 @@ def live_retrieve():
 
 
 if __name__ == '__main__':
-    categories = ['all', 'javascript', 'html', 'php', 'ruby', 'python', 'java', 'net', 'scala', 'c', 'mobile', 'testing', 'devops', 'ux', 'pm', 'game', 'analytics', 'security', 'data', 'go', 'sap', 'support', 'other']
-
+    categories = ['python', 'java', 'net', 'scala', 'c', 'mobile', 'testing', 'devops', 'ux', 'pm', 'game', 'analytics', 'security', 'data', 'go', 'sap', 'support', 'other']
+# 'all', 'javascript', 'html', 'php', 'ruby',
     conn = sqlite3.connect('skill_counter.sqlite')
     cur = conn.cursor()
 
