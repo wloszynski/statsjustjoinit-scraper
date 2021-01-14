@@ -16,23 +16,20 @@ with open("skills.json", "w") as fp:
     fp.write('{"skills":{ ')
 
     for category in categories:
-        fp.write('\n"'+category+'":{')
+        fp.write('\n"'+category+'":[')
         id = 1
 
         cur.execute('''
         SELECT skill.name, overtime_skills.counter
         FROM overtime_skills
         INNER JOIN skill ON skill.id=overtime_skills.skill_id
-        WHERE overtime_skills.language_id like ? AND date_created like "2021-01-09" AND overtime_skills.counter > 1 LIMIT 20''',(categories.index(category)+1,))
+        WHERE overtime_skills.language_id like ? AND date_created like "2021-01-09" AND overtime_skills.counter > 1 LIMIT 30''',(categories.index(category)+1,))
         rows = cur.fetchall()
 
 
         for row in rows:
             (skill, counter) = row
-            fp.write('"'+skill+'":')
-
-
-            item = f'\"id\":\"{id}\", \"counter\" :\"{counter}\"'
+            item = f'\"name\":\"{skill}\",\"id\":\"{id}\", \"counter\" :\"{counter}\"'
             if(len(rows) != id):
                 item = '{' + item + '}'
             else:
@@ -46,9 +43,9 @@ with open("skills.json", "w") as fp:
 
             id += 1
         if(len(categories) != categories.index(category)+1):
-            fp.write('},\n')
+            fp.write('],\n')
         else:
-            fp.write('}\n')
+            fp.write(']\n')
 
     fp.write('}}')
 
