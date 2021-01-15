@@ -12,8 +12,43 @@ cur = conn.cursor()
 
 
 
-with open("skills.json", "w") as fp:
+with open("skillstest.json", "w") as fp:
     fp.write('{"skills":{ ')
+
+
+
+    cur.execute('''
+    SELECT language.name, overtime_jobs.counter
+    FROM overtime_jobs
+    INNER JOIN language ON language.id=overtime_jobs.language_id
+    WHERE date_created like "2021-01-09"
+    ORDER BY overtime_jobs.counter DESC''')
+    rows = cur.fetchall()
+    fp.write('\n\"jobs\":[')
+    id = 0
+
+    for row in rows:
+        if(id==0):
+            id+=1
+            continue
+
+        (skill, counter) = row
+        item = f'\"name\":\"{skill}\",\"id\":\"{id}\", \"counter\" :\"{counter}\"'
+        if(len(rows) != id):
+            item = '{' + item + '}'
+        else:
+            item = '{' + item + '}'
+
+        fp.write(item)
+        if(len(rows) != id):
+            fp.write(',')
+        else:
+            fp.write('')
+
+        id += 1
+    fp.write('],\n')
+
+
 
     for category in categories:
         fp.write('\n"'+category+'":[')
@@ -23,7 +58,9 @@ with open("skills.json", "w") as fp:
         SELECT skill.name, overtime_skills.counter
         FROM overtime_skills
         INNER JOIN skill ON skill.id=overtime_skills.skill_id
-        WHERE overtime_skills.language_id like ? AND date_created like "2021-01-09" AND overtime_skills.counter > 1 LIMIT 30''',(categories.index(category)+1,))
+        WHERE overtime_skills.language_id like ? AND date_created like "2021-01-09" AND overtime_skills.counter > 1
+        ORDER BY overtime_skills.counter DESC
+        LIMIT 30''',(categories.index(category)+1,))
         rows = cur.fetchall()
 
 
