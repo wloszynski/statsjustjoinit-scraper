@@ -120,7 +120,7 @@ notify-py==0.3.0
 notify2==0.3.1
 numba==0.50.1
 numexpr==2.7.1
-numpy==1.18.5
+numpy==1.22.0
 numpydoc @ file:///tmp/build/80754af9/numpydoc_1594166760263/work
 olefile==0.46
 openpyxl @ file:///tmp/build/80754af9/openpyxl_1594167385094/work
